@@ -90,9 +90,9 @@ export default function NotifyGate() {
 
       {state === 'ask' && (
         <>
-          <h1 className="mt-10 text-center font-serif text-5xl leading-tight">Ative os lembretes</h1>
+          <h1 className="mt-10 text-center font-serif text-4xl leading-tight">Quer receber um lembrete na hora certa?</h1>
           <p className="mt-4 max-w-xs text-center text-xl text-sand/90">
-            São eles que te seguram nos momentos difíceis. Sem eles, o app fica esquecido.
+            Podemos avisar você nos horários em que a vontade costuma aparecer.
           </p>
           <div className="mt-auto w-full space-y-3 pb-6 pt-10">
             {msg && <p className="rounded-xl bg-red-950/60 p-3 text-center text-red-200">{msg}</p>}
