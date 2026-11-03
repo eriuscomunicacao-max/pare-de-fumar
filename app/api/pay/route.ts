@@ -23,7 +23,8 @@ const errMsg = (j: any, fallback: string) => j?.errors?.[0]?.description || fall
 
 export async function POST(req: Request) {
   const user = await userFromRequest(req)
-   if (!(await rateLimit(`pay:${user.id}`, 10, 3600)))
+  if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
+  if (!(await rateLimit(`pay:${user.id}`, 10, 3600)))
     return NextResponse.json({ error: 'Muitas tentativas. Tente de novo em alguns minutos.' }, { status: 429 })
 
   const body = await req.json()
