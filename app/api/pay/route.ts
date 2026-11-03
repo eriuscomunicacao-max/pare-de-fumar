@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { admin, userFromRequest } from '@/lib/supabase-admin'
+import { rateLimit } from '@/lib/rate-limit'
 
 const AI_PRICE = 59.9
 const PLAN_FIRST = 9.9
@@ -22,7 +23,8 @@ const errMsg = (j: any, fallback: string) => j?.errors?.[0]?.description || fall
 
 export async function POST(req: Request) {
   const user = await userFromRequest(req)
-  if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
+   if (!(await rateLimit(`pay:${user.id}`, 10, 3600)))
+    return NextResponse.json({ error: 'Muitas tentativas. Tente de novo em alguns minutos.' }, { status: 429 })
 
   const body = await req.json()
   const product: 'plan' | 'ai' = body.product === 'ai' ? 'ai' : 'plan'
