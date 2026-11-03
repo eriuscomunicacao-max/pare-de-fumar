@@ -23,6 +23,10 @@ export type Profile = {
   ai_active: boolean
   ai_period_end: string | null
   trial_ends_at: string | null
+  created_at: string
+  activated_at: string | null
+  gift1_downloaded_at: string | null
+  gift2_downloaded_at: string | null
 }
 
 // acesso liberado: plano pago OU teste de 24h ainda correndo
