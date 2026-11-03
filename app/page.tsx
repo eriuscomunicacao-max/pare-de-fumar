@@ -17,7 +17,7 @@ const STEPS = [
   {
     Icon: Trophy,
     title: 'Cada vontade vencida vira conquista.',
-    text: 'Acende uma luz no seu caminho e você ganha prêmios por isso.',
+    text: 'E você ganha prêmios por isso.',
     bold: true,
   },
   {
