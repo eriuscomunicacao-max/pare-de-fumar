@@ -1,10 +1,18 @@
 import { NextResponse } from 'next/server'
 import { admin } from '@/lib/supabase-admin'
+import { safeEqual } from '@/lib/security'
 
 const BAD = ['PAYMENT_OVERDUE', 'SUBSCRIPTION_DELETED', 'SUBSCRIPTION_INACTIVATED', 'PAYMENT_REFUNDED']
+const PAID = ['CONFIRMED', 'RECEIVED', 'RECEIVED_IN_CASH']
+
+const asaasHeaders = () => ({
+  'Content-Type': 'application/json',
+  access_token: process.env.ASAAS_API_KEY!,
+  'User-Agent': 'pare-de-fumar-app',
+})
 
 export async function POST(req: Request) {
-  if (req.headers.get('asaas-access-token') !== process.env.ASAAS_WEBHOOK_TOKEN)
+  if (!safeEqual(req.headers.get('asaas-access-token'), process.env.ASAAS_WEBHOOK_TOKEN))
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
 
   const body = await req.json()
@@ -27,12 +35,21 @@ export async function POST(req: Request) {
   if (!p) return NextResponse.json({ ok: true })
 
   if (event === 'PAYMENT_CONFIRMED' || event === 'PAYMENT_RECEIVED') {
-    // idempotência: cartão dispara CONFIRMED e, semanas depois, RECEIVED do mesmo pagamento
     const payId: string | undefined = body.payment?.id
-    if (payId) {
-      const { error } = await admin.from('asaas_payments').insert({ payment_id: payId })
-      if (error) return NextResponse.json({ ok: true, duplicate: true })
-    }
+    if (!payId) return NextResponse.json({ ok: true })
+
+    // não confia só no corpo do webhook: confere o pagamento direto no Asaas
+    const real = await fetch(`${process.env.ASAAS_URL}/payments/${payId}`, { headers: asaasHeaders() })
+      .then(r => r.json())
+      .catch(() => null)
+    if (!real?.id) return NextResponse.json({ error: 'asaas indisponível' }, { status: 500 }) // Asaas tenta de novo
+    if (!PAID.includes(real.status) || real.subscription !== subId)
+      return NextResponse.json({ ok: true, ignored: true })
+
+    // idempotência: cartão dispara CONFIRMED e, semanas depois, RECEIVED do mesmo pagamento
+    const { error } = await admin.from('asaas_payments').insert({ payment_id: payId })
+    if (error) return NextResponse.json({ ok: true, duplicate: true })
+
     const end = new Date()
     end.setDate(end.getDate() + 32)
 
@@ -47,11 +64,7 @@ export async function POST(req: Request) {
       if (p.paid_count === 0) {
         await fetch(`${process.env.ASAAS_URL}/subscriptions/${subId}`, {
           method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            access_token: process.env.ASAAS_API_KEY!,
-            'User-Agent': 'pare-de-fumar-app',
-          },
+          headers: asaasHeaders(),
           body: JSON.stringify({ value: 27.9, updatePendingPayments: false }),
         })
       }
