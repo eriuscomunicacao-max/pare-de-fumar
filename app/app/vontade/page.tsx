@@ -137,7 +137,10 @@ export default function Vontade() {
           >
             A vontade passou
           </button>
-          <button className="btn-ghost" onClick={() => router.push('/app/ia')}>
+          <button
+            className="btn-ghost"
+            onClick={() => (profile.ai_active ? router.push('/app/ia') : setStep('breathe'))}
+          >
             Ainda estou com vontade
           </button>
           <button
@@ -178,9 +181,11 @@ export default function Vontade() {
               <p key={t} className="text-lg">• {t}</p>
             ))}
           </div>
-          <Link href="/app/ia" className="btn-ghost">
-            Conversar com o Companheiro
-          </Link>
+          {profile.ai_active && (
+            <Link href="/app/ia" className="btn-ghost">
+              Conversar com o Companheiro
+            </Link>
+          )}
           <Link href="/app" className="btn-gold">
             Voltar ao início
           </Link>
