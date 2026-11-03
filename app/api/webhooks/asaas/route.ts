@@ -24,11 +24,11 @@ export async function POST(req: Request) {
   let kind: 'plan' | 'ai' = 'plan'
   let { data: p } = await admin
     .from('profiles')
-    .select('id, paid_count')
+    .select('id, paid_count, activated_at')
     .eq('asaas_subscription_id', subId)
     .maybeSingle()
   if (!p) {
-    const r = await admin.from('profiles').select('id, paid_count').eq('ai_subscription_id', subId).maybeSingle()
+    const r = await admin.from('profiles').select('id, paid_count, activated_at').eq('ai_subscription_id', subId).maybeSingle()
     p = r.data
     kind = 'ai'
   }
@@ -58,7 +58,12 @@ export async function POST(req: Request) {
     } else {
       await admin
         .from('profiles')
-        .update({ status: 'active', paid_count: p.paid_count + 1, current_period_end: end.toISOString() })
+        .update({
+          status: 'active',
+          paid_count: p.paid_count + 1,
+          current_period_end: end.toISOString(),
+          activated_at: p.activated_at ?? new Date().toISOString(),
+        })
         .eq('id', p.id)
       // 1º pagamento confirmado: próximas cobranças passam para 27,90
       if (p.paid_count === 0) {
