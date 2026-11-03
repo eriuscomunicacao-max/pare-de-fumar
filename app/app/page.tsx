@@ -2,10 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Check, ChevronRight, Settings, Wind } from 'lucide-react'
+import { Brain, Check, ChevronRight, Settings, Wind } from 'lucide-react'
 import Desert from '@/components/Desert'
-import InstallGuide from '@/components/InstallGuide'
-import NotifyButton from '@/components/NotifyButton'
+import { todayBR } from '@/lib/date'
 import { levelInfo } from '@/lib/journey'
 import { MISSIONS } from '@/lib/missions'
 import { supabase } from '@/lib/supabase-browser'
@@ -20,7 +19,7 @@ export default function Home() {
     supabase
       .from('missions_done')
       .select('mission_key')
-      .eq('done_on', new Date().toISOString().slice(0, 10))
+      .eq('done_on', todayBR())
       .then(({ data }) => setDone((data || []).map(d => d.mission_key)))
   }, [])
 
@@ -61,9 +60,7 @@ export default function Home() {
       </Link>
 
       <section className="space-y-3">
-        <div className="flex items-baseline justify-between">
-          <h2 className="font-serif text-2xl">Missões de hoje</h2>
-        </div>
+        <h2 className="font-serif text-2xl">Missões de hoje</h2>
         {todays.map(m => (
           <Link
             key={m.key}
@@ -83,12 +80,21 @@ export default function Home() {
         ))}
       </section>
 
-      <Link href="/app/ia" className="btn-ghost">
-        Companheiro IA
-      </Link>
-
-      <InstallGuide />
-      <NotifyButton />
+      {profile.ai_active ? (
+        <Link href="/app/ia" className="btn-ghost">
+          <Brain size={20} /> Companheiro IA
+        </Link>
+      ) : (
+        <Link href="/app/ia" className="panel block space-y-2 border-gold/40 bg-gold/10 active:scale-[0.99]">
+          <p className="flex items-center gap-2 font-serif text-2xl text-gold">
+            <Brain size={24} /> Companheiro IA
+          </p>
+          <p className="text-sand/90">
+            Apoio na hora da vontade, com base nos seus gatilhos. Fala só sobre parar de fumar.
+          </p>
+          <p className="text-lg font-semibold text-gold">R$ 59,90 por mês · Conhecer</p>
+        </Link>
+      )}
     </main>
   )
 }
