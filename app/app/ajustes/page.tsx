@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Gift } from 'lucide-react'
 import InstallGuide from '@/components/InstallGuide'
 import NotifyButton from '@/components/NotifyButton'
 import { supabase } from '@/lib/supabase-browser'
@@ -44,6 +44,10 @@ export default function Ajustes() {
         </div>
         <button className="btn-ghost" onClick={save}>{ok ? 'Salvo' : 'Salvar horários'}</button>
       </section>
+
+      <Link href="/app/presentes" className="btn-ghost">
+        <Gift size={20} /> Meus presentes
+      </Link>
 
       <InstallGuide always />
 
