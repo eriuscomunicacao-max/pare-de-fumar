@@ -1,39 +1,30 @@
 export const LEVELS = [
-  { name: 'Primeiro Respiro', hours: 1, label: '1 hora' },
-  { name: 'Passo Firme', hours: 3, label: '3 horas' },
-  { name: 'Novo Ritmo', hours: 6, label: '6 horas' },
-  { name: 'Horizonte Aberto', hours: 12, label: '12 horas' },
-  { name: 'Primeiro Dia', hours: 24, label: '24 horas' },
+  { name: 'Primeiro Dia', hours: 24, label: '1 dia' },
   { name: 'Aurora', hours: 72, label: '3 dias' },
-  { name: 'Oásis', hours: 168, label: '7 dias' },
-  { name: 'Miragem', hours: 336, label: '14 dias' },
-  { name: 'Travessia', hours: 720, label: '30 dias' },
-  { name: 'Deserto Dourado', hours: 1440, label: '60 dias' },
-  { name: 'Novo Caminho', hours: 2160, label: '90 dias' },
+  { name: 'Fôlego Novo', hours: 168, label: '7 dias' },
+  { name: 'Travessia', hours: 336, label: '14 dias' },
+  { name: 'Horizonte', hours: 720, label: '30 dias' },
+  { name: 'Nova Estrada', hours: 2160, label: '90 dias' },
   { name: 'Vida Livre', hours: 4320, label: '6 meses' },
 ]
 
-// Ícones da trilha (URL de cada marco). Ordem: Início + os 12 níveis = 13 URLs.
-// Preencha aqui. Enquanto estiver vazio, o app mostra um círculo numerado.
+// Um ícone por marco: Partida + 7 níveis = 8 URLs, na ordem da trilha.
+// Dica: baixe os arquivos para /public/icons e troque por '/icons/arquivo.webp'
+// para o app não depender do servidor deles.
 export const ICON_URLS: string[] = [
-  // 0 Início
-  // 1 Primeiro Respiro
-  // 2 Passo Firme
-  // 3 Novo Ritmo
-  // 4 Horizonte Aberto
-  // 5 Primeiro Dia
-  // 6 Aurora
-  // 7 Oásis
-  // 8 Miragem
-  // 9 Travessia
-  // 10 Deserto Dourado
-  // 11 Novo Caminho
-  // 12 Vida Livre
+  'https://app.cakto.com.br/assets/awards/caktos/inicio.webp',
+  'https://app.cakto.com.br/assets/awards/caktos/mirage.webp',
+  'https://app.cakto.com.br/assets/awards/caktos/oasis.webp',
+  'https://app.cakto.com.br/assets/awards/caktos/dune.webp',
+  'https://app.cakto.com.br/assets/awards/caktos/solaris.webp',
+  'https://app.cakto.com.br/assets/awards/caktos/imperium.webp',
+  'https://app.cakto.com.br/assets/awards/caktos/golden-desert.webp',
+  'https://app.cakto.com.br/assets/awards/caktos/supreme-sun.webp',
 ]
 export const iconFor = (i: number): string | undefined => ICON_URLS[i] || undefined
 
-// nós do mapa: índice 0 = Início
-export const NODES = [{ name: 'Início', hours: 0, label: 'Começo' }, ...LEVELS]
+// nós do mapa: índice 0 = Partida
+export const NODES = [{ name: 'Partida', hours: 0, label: 'Começo' }, ...LEVELS]
 
 export function levelInfo(seconds: number) {
   const h = Math.max(0, seconds) / 3600
