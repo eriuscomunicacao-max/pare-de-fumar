@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Bell, Coins, Crown, Route, Wind } from 'lucide-react'
+import { Bell, Coins, Crown, Gift, Route, Wind } from 'lucide-react'
 import Desert from '@/components/Desert'
 import PaymentForm from '@/components/PaymentForm'
 import { hasAccess, loadProfile, Profile } from '@/lib/profile-context'
@@ -13,6 +13,8 @@ const FEATURES = [
   { Icon: Route, title: 'Trilha com missões', text: 'Níveis, conquistas e a sua evolução.' },
   { Icon: Bell, title: 'Lembretes que motivam', text: 'Frases de apoio nos seus horários.' },
   { Icon: Coins, title: 'Economia e progresso', text: 'Veja quanto você já deixou de gastar.' },
+  { Icon: Gift, title: 'Prêmio em 3 dias', text: 'Um presente para te ajudar a continuar.' },
+  { Icon: Gift, title: 'O maior prêmio em 7 dias', text: 'Para quem segue com o plano ativo.' },
 ]
 
 export default function Plano() {
