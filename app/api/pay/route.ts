@@ -41,6 +41,18 @@ export async function POST(req: Request) {
     if (p.ai_active) return NextResponse.json({ error: 'O Companheiro IA já está ativo.' }, { status: 400 })
   }
 
+  // ----- telefone: pedido só na hora de pagar ("salve sua jornada") -----
+  let phone: string | null = p.phone
+  if (!phone) {
+    const d = digits(body.phone)
+    if (d.length < 10 || d.length > 13)
+      return NextResponse.json({ error: 'Informe um telefone válido para salvar a sua jornada.' }, { status: 400 })
+    const { error: phErr } = await admin.from('profiles').update({ phone: d }).eq('id', user.id)
+    if (phErr)
+      return NextResponse.json({ error: 'Esse telefone já está em outra conta. Fale com o suporte.' }, { status: 409 })
+    phone = d
+  }
+
   // ----- cliente no Asaas -----
   const cpf = digits(body.cpf)
   let customerId: string | null = p.asaas_customer_id
@@ -52,7 +64,7 @@ export async function POST(req: Request) {
       body: JSON.stringify({
         name: p.name,
         cpfCnpj: cpf,
-        mobilePhone: p.phone,
+        mobilePhone: phone,
         externalReference: user.id,
         notificationDisabled: true,
       }),
@@ -99,7 +111,7 @@ export async function POST(req: Request) {
       cpfCnpj: holderCpf,
       postalCode: digits(h.cep),
       addressNumber: String(h.number),
-      phone: p.phone,
+      phone,
     }
     subBody.remoteIp = (req.headers.get('x-forwarded-for') || '127.0.0.1').split(',')[0].trim()
   }
