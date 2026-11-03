@@ -5,15 +5,14 @@ import { useRouter } from 'next/navigation'
 import Desert from '@/components/Desert'
 import InstallGuide from '@/components/InstallGuide'
 import { supabase } from '@/lib/supabase-browser'
-import { loadProfile, Profile } from '@/lib/profile-context'
+import { hasAccess, loadProfile, Profile } from '@/lib/profile-context'
 
 export default function Welcome() {
   const router = useRouter()
   const [step, setStep] = useState<'checking' | 'welcome' | 'form'>('checking')
   const [name, setName] = useState('')
-  const [phone, setPhone] = useState('')
   const [cigs, setCigs] = useState('10')
-  const [price, setPrice] = useState('12')
+  const [mode, setMode] = useState<'parar' | 'reduzir'>('parar')
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
   const [existing, setExisting] = useState<Profile | null>(null)
@@ -26,7 +25,7 @@ export default function Welcome() {
   }, [])
 
   function start() {
-    if (existing) router.push(existing.status === 'active' ? '/app' : '/plano')
+    if (existing) router.push(hasAccess(existing) ? '/app' : '/plano')
     else setStep('form')
   }
 
@@ -38,18 +37,13 @@ export default function Welcome() {
       const r = await fetch('/api/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name,
-          phone,
-          cigsPerDay: Number(cigs),
-          packPrice: Number(price.replace(',', '.')),
-        }),
+        body: JSON.stringify({ name, cigsPerDay: Number(cigs), mode }),
       })
       const j = await r.json()
       if (!r.ok) throw new Error(j.error)
       const { error } = await supabase.auth.signInWithPassword({ email: j.email, password: j.password })
       if (error) throw new Error('Não foi possível entrar. Tente de novo.')
-      router.push('/plano')
+      router.push('/app')
     } catch (e: any) {
       setErr(e.message || 'Algo deu errado.')
       setBusy(false)
@@ -73,48 +67,51 @@ export default function Welcome() {
               </h1>
               <p className="mt-5 font-serif text-2xl text-gold">Respire. Recomece.</p>
               <p className="mt-2 max-w-[17rem] text-lg text-sand/85">
-                Cada vontade superada abre um novo caminho.
+                Vamos começar com uma pequena vitória.
               </p>
             </div>
             <div className="mt-auto space-y-4 pb-6 pt-10">
               <InstallGuide />
               <button className="btn-gold" onClick={start}>
-                Começar
+                {existing ? 'Continuar minha jornada' : 'Começar minha primeira missão'}
               </button>
+              {!existing && <p className="text-center text-sm text-mute">Grátis por 24 horas. Sem cartão.</p>}
             </div>
           </>
         ) : (
-          <form onSubmit={submit} className="my-auto space-y-4 py-8">
+          <form onSubmit={submit} className="my-auto space-y-5 py-8">
             <h2 className="font-serif text-4xl text-sand">Vamos começar</h2>
-            <p className="text-mute">Só precisamos de quatro informações.</p>
             <label className="block space-y-1.5">
-              <span className="text-sand/90">Seu nome</span>
-              <input className="field" value={name} onChange={e => setName(e.target.value)} placeholder="Ana" required />
+              <span className="text-sand/90">Como podemos te chamar?</span>
+              <input className="field" value={name} onChange={e => setName(e.target.value)} placeholder="Nome ou apelido" required />
             </label>
             <label className="block space-y-1.5">
-              <span className="text-sand/90">Seu telefone (com DDD)</span>
-              <input
-                className="field"
-                inputMode="tel"
-                value={phone}
-                onChange={e => setPhone(e.target.value)}
-                placeholder="(11) 99999-9999"
-                required
-              />
+              <span className="text-sand/90">Quantos cigarros você fuma por dia?</span>
+              <input className="field" inputMode="numeric" value={cigs} onChange={e => setCigs(e.target.value)} required />
             </label>
-            <div className="grid grid-cols-2 gap-3">
-              <label className="block space-y-1.5">
-                <span className="text-sand/90">Cigarros por dia</span>
-                <input className="field" inputMode="numeric" value={cigs} onChange={e => setCigs(e.target.value)} required />
-              </label>
-              <label className="block space-y-1.5">
-                <span className="text-sand/90">Preço do maço (R$)</span>
-                <input className="field" inputMode="decimal" value={price} onChange={e => setPrice(e.target.value)} required />
-              </label>
+            <div className="space-y-1.5">
+              <span className="text-sand/90">Qual é o seu objetivo?</span>
+              <div className="grid grid-cols-2 gap-3">
+                {(
+                  [
+                    ['parar', 'Parar agora'],
+                    ['reduzir', 'Reduzir aos poucos'],
+                  ] as const
+                ).map(([v, l]) => (
+                  <button
+                    type="button"
+                    key={v}
+                    onClick={() => setMode(v)}
+                    className={`chip py-4 text-center ${mode === v ? 'chip-on' : ''}`}
+                  >
+                    {l}
+                  </button>
+                ))}
+              </div>
             </div>
             {err && <p className="rounded-xl bg-red-950/60 p-3 text-red-200">{err}</p>}
             <button className="btn-gold" disabled={busy}>
-              {busy ? 'Criando…' : 'Continuar'}
+              {busy ? 'Preparando…' : 'Entrar na minha primeira missão'}
             </button>
             <button type="button" className="w-full py-2 text-mute" onClick={() => setStep('welcome')}>
               Voltar
