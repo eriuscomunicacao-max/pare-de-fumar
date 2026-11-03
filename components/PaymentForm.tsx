@@ -10,13 +10,15 @@ type Props = {
   product: 'plan' | 'ai'
   price: number
   hasCustomer: boolean
+  needsPhone?: boolean
   isPaid: (p: Profile) => boolean
   onPaid: () => void
 }
 
-export default function PaymentForm({ product, price, hasCustomer, isPaid, onPaid }: Props) {
+export default function PaymentForm({ product, price, hasCustomer, needsPhone = false, isPaid, onPaid }: Props) {
   const [tab, setTab] = useState<'pix' | 'card'>('pix')
   const [cpf, setCpf] = useState('')
+  const [phone, setPhone] = useState('')
   const [pix, setPix] = useState<{ image: string; payload: string } | null>(null)
   const [copied, setCopied] = useState(false)
   const [card, setCard] = useState({ number: '', name: '', exp: '', ccv: '' })
@@ -42,9 +44,10 @@ export default function PaymentForm({ product, price, hasCustomer, isPaid, onPai
 
   async function generatePix() {
     setErr('')
+    if (needsPhone && phone.replace(/\D/g, '').length < 10) return setErr('Informe o seu telefone com DDD.')
     setBusy(true)
     try {
-      const r = await apiPost<{ image: string; payload: string }>('/api/pay', { product, method: 'pix', cpf })
+      const r = await apiPost<{ image: string; payload: string }>('/api/pay', { product, method: 'pix', cpf, phone })
       setPix({ image: r.image, payload: r.payload })
       poll()
     } catch (e: any) {
@@ -56,6 +59,7 @@ export default function PaymentForm({ product, price, hasCustomer, isPaid, onPai
   async function payCard(e: React.FormEvent) {
     e.preventDefault()
     setErr('')
+    if (needsPhone && phone.replace(/\D/g, '').length < 10) return setErr('Informe o seu telefone com DDD.')
     setBusy(true)
     const [month, year] = card.exp.split('/')
     try {
@@ -63,6 +67,7 @@ export default function PaymentForm({ product, price, hasCustomer, isPaid, onPai
         product,
         method: 'card',
         cpf,
+        phone,
         card: { number: card.number, name: card.name, month, year, ccv: card.ccv },
         holder: { ...holder, cpf },
       })
@@ -90,6 +95,12 @@ export default function PaymentForm({ product, price, hasCustomer, isPaid, onPai
 
   return (
     <div className="space-y-4">
+      {needsPhone && (
+        <label className="block space-y-1.5">
+          <span className="text-sand/90">Salve sua jornada e proteja seu progresso</span>
+          <input className="field" inputMode="tel" autoComplete="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="Seu telefone com DDD" />
+        </label>
+      )}
       <div className="grid grid-cols-2 gap-2 rounded-full border border-line bg-card p-1">
         {(['pix', 'card'] as const).map(t => (
           <button
