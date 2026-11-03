@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 import InstallGuide from '@/components/InstallGuide'
 import NotifyButton from '@/components/NotifyButton'
@@ -12,7 +11,6 @@ import { useProfile } from '@/lib/profile-context'
 const HORAS = [7, 8, 9, 10, 12, 13, 15, 17, 18, 20, 21, 22]
 
 export default function Ajustes() {
-  const router = useRouter()
   const { profile, refresh } = useProfile()
   const [hours, setHours] = useState<number[]>(profile.notify_hours)
   const [ok, setOk] = useState(false)
@@ -27,7 +25,7 @@ export default function Ajustes() {
   }
 
   return (
-    <main className="space-y-5 px-5 safe-top">
+    <main className="space-y-5 px-5 pb-6 safe-top">
       <Link href="/app" className="inline-flex items-center gap-1 py-3 text-mute">
         <ArrowLeft size={20} /> Voltar
       </Link>
@@ -54,19 +52,6 @@ export default function Ajustes() {
         <p className="text-lg">{profile.name}</p>
         <p className="text-mute">{profile.phone}</p>
       </section>
-
-      <button
-        className="btn-ghost"
-        onClick={async () => {
-          await supabase.auth.signOut()
-          router.replace('/')
-        }}
-      >
-        Sair deste aparelho
-      </button>
-      <p className="pb-4 text-center text-sm text-mute">
-        Se sair, só o suporte consegue devolver o acesso à sua conta.
-      </p>
     </main>
   )
 }
