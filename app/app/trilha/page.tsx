@@ -51,6 +51,39 @@ export default function Trilha() {
   const [saving, setSaving] = useState(false)
   const userScrolled = useRef(false)
 
+  // luzes: cada conquista (missão ou vontade superada) acende um ponto do caminho
+  const allRef = useRef<SVGPathElement>(null)
+  const [wins, setWins] = useState(0)
+  const [fresh, setFresh] = useState(0)
+  const [lights, setLights] = useState<{ x: number; y: number }[]>([])
+
+  useEffect(() => {
+    ;(async () => {
+      const [{ count: m }, { count: c }] = await Promise.all([
+        supabase.from('missions_done').select('id', { count: 'exact', head: true }),
+        supabase.from('cravings').select('id', { count: 'exact', head: true }).eq('smoked', false),
+      ])
+      const total = (m || 0) + (c || 0)
+      const k = `wins-seen:${profile.id}`
+      const seen = Number(localStorage.getItem(k) ?? 0)
+      setWins(total)
+      setFresh(Math.min(3, Math.max(0, total - seen)))
+      setTimeout(() => localStorage.setItem(k, String(total)), 5000)
+    })()
+  }, [profile.id])
+
+  useEffect(() => {
+    const all = allRef.current
+    if (!all) return
+    const L = all.getTotalLength()
+    setLights(
+      Array.from({ length: Math.floor(L / 24) }, (_, k) => {
+        const p = all.getPointAtLength(24 * (k + 1))
+        return { x: p.x, y: p.y }
+      })
+    )
+  }, [H])
+
   // animação: do começo até a posição atual
   useEffect(() => {
     const done = doneRef.current
@@ -112,6 +145,10 @@ export default function Trilha() {
 
   return (
     <main>
+      <style>{`
+        @keyframes light-ring{0%{transform:scale(.6);opacity:.9}100%{transform:scale(3);opacity:0}}
+        @keyframes light-pop{0%{transform:scale(0)}60%{transform:scale(1.8)}100%{transform:scale(1)}}
+      `}</style>
       <div className="space-y-3 px-5 pb-3 pt-3 safe-top">
         <div>
           <h1 className="font-serif text-4xl">Minha trilha</h1>
@@ -122,6 +159,11 @@ export default function Trilha() {
           <span className="flex items-center gap-1.5"><i className="h-2.5 w-2.5 rounded-full bg-gold" /> Você: {NODES[idx].name}</span>
           <span className="flex items-center gap-1.5"><Flag size={14} className="text-gold" /> Meta: {NODES[goal].name}</span>
         </div>
+        {fresh > 0 && (
+          <p className="rounded-xl border border-gold/40 bg-gold/10 px-4 py-2 text-gold">
+            {fresh === 1 ? '+1 luz acesa no seu caminho' : `+${fresh} luzes acesas no seu caminho`}
+          </p>
+        )}
       </div>
 
       <div ref={boxRef} className="relative mx-3 overflow-hidden rounded-3xl border border-line" style={{ aspectRatio: `${W} / ${H}` }}>
@@ -129,9 +171,41 @@ export default function Trilha() {
         <div className="absolute inset-0 bg-ink/55" />
 
         <svg viewBox={`0 0 ${W} ${H}`} className="absolute inset-0 h-full w-full">
-          <path d={dAll} fill="none" stroke="#f3ece0" strokeOpacity="0.12" strokeWidth="12" strokeLinecap="round" />
+          <path ref={allRef} d={dAll} fill="none" stroke="#f3ece0" strokeOpacity="0.12" strokeWidth="12" strokeLinecap="round" />
           {/* caminho até a meta */}
           <path d={dGoal} fill="none" stroke="#e8c36a" strokeOpacity="0.55" strokeWidth="3.5" strokeLinecap="round" strokeDasharray="0.1 11" />
+          {/* luzes das conquistas */}
+          {lights.map((p, k) => {
+            const lit = k < wins
+            const isFresh = lit && k >= wins - fresh
+            return lit ? (
+              <g key={k}>
+                {isFresh && (
+                  <circle
+                    cx={p.x}
+                    cy={p.y}
+                    r="6"
+                    fill="none"
+                    stroke="#e8c36a"
+                    strokeWidth="2"
+                    style={{ transformBox: 'fill-box', transformOrigin: 'center', animation: 'light-ring 1.6s ease-out infinite' }}
+                  />
+                )}
+                <circle
+                  cx={p.x}
+                  cy={p.y}
+                  r={isFresh ? 5.5 : 4}
+                  fill="#ffe3a0"
+                  style={{
+                    filter: 'drop-shadow(0 0 5px rgba(232,195,106,.95))',
+                    ...(isFresh ? { transformBox: 'fill-box', transformOrigin: 'center', animation: 'light-pop .9s ease-out both' } : {}),
+                  }}
+                />
+              </g>
+            ) : (
+              <circle key={k} cx={p.x} cy={p.y} r="2" fill="#f3ece0" opacity="0.18" />
+            )
+          })}
           {/* trecho percorrido, animado */}
           <path
             ref={curRef}
