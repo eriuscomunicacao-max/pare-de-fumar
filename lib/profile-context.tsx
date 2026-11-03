@@ -36,18 +36,36 @@ export const useProfile = () => {
 export async function loadProfile(): Promise<Profile | null> {
   const { data: s } = await supabase.auth.getSession()
   if (!s.session) return null
-  const { data } = await supabase.from('profiles').select('*').eq('id', s.session.user.id).single()
-  return (data as Profile) ?? null
+  // tenta algumas vezes: uma falha de rede não pode derrubar a pessoa para o login
+  for (let i = 0; i < 3; i++) {
+    const { data } = await supabase.from('profiles').select('*').eq('id', s.session.user.id).maybeSingle()
+    if (data) return data as Profile
+    await new Promise(r => setTimeout(r, 600))
+  }
+  return null
 }
 
 export function ProfileProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const [profile, setProfile] = useState<Profile | null>(null)
+  const [failed, setFailed] = useState(false)
 
   const refresh = useCallback(async () => {
+    const { data: s } = await supabase.auth.getSession()
+    if (!s.session) return router.replace('/') // só aqui: realmente sem sessão
     const p = await loadProfile()
-    if (!p) return router.replace('/')
+    if (!p) {
+      // conta apagada no servidor? então a sessão guardada no aparelho não vale mais
+      const { data: u, error } = await supabase.auth.getUser()
+      if (error || !u.user) {
+        await supabase.auth.signOut()
+        return router.replace('/')
+      }
+      setFailed(true) // sessão válida, mas o perfil não carregou: mostra "tentar de novo"
+      return
+    }
     if (p.status !== 'active') return router.replace('/plano')
+    setFailed(false)
     setProfile(p)
   }, [router])
 
@@ -56,7 +74,20 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
   }, [refresh])
 
   if (!profile)
-    return (
+    return failed ? (
+      <div className="flex min-h-dvh flex-col items-center justify-center gap-4 px-6 text-center">
+        <p className="text-lg">Não consegui carregar agora.</p>
+        <button
+          className="btn-gold max-w-xs"
+          onClick={() => {
+            setFailed(false)
+            refresh()
+          }}
+        >
+          Tentar de novo
+        </button>
+      </div>
+    ) : (
       <div className="flex min-h-dvh items-center justify-center text-mute">Carregando sua trilha…</div>
     )
   return <ProfileCtx.Provider value={{ profile, refresh }}>{children}</ProfileCtx.Provider>
