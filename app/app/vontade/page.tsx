@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Play } from 'lucide-react'
+import { ArrowLeft, Check, Play } from 'lucide-react'
 import { supabase } from '@/lib/supabase-browser'
 import { useProfile } from '@/lib/profile-context'
 
@@ -21,6 +21,7 @@ export default function Vontade() {
   const [trigger, setTrigger] = useState('')
   const [left, setLeft] = useState(TOTAL)
   const [helped, setHelped] = useState('Respiração')
+  const [won, setWon] = useState(1)
 
   useEffect(() => {
     if (step !== 'breathe') return
@@ -132,6 +133,11 @@ export default function Vontade() {
             className="btn-gold"
             onClick={async () => {
               await save(false)
+              const { count } = await supabase
+                .from('cravings')
+                .select('id', { count: 'exact', head: true })
+                .eq('smoked', false)
+              setWon(count || 1)
               setStep('won')
             }}
           >
@@ -157,13 +163,24 @@ export default function Vontade() {
 
       {step === 'won' && (
         <div className="space-y-5 pt-8 text-center">
-          <h1 className="font-serif text-4xl">Mais uma vontade superada</h1>
-          <p className="text-lg text-mute">Cada vontade superada abre um novo caminho.</p>
-          <div className="panel">
-            <p className="text-sm text-mute">Recompensa</p>
-            <p className="font-serif text-3xl text-gold">+1 conquista</p>
+          <style>{`
+            @keyframes win-pop{0%{transform:scale(.3);opacity:0}60%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+            @keyframes win-glow{0%,100%{box-shadow:0 0 30px rgba(232,195,106,.45)}50%{box-shadow:0 0 70px rgba(232,195,106,.85)}}
+          `}</style>
+          <div
+            className="mx-auto flex h-28 w-28 items-center justify-center rounded-full bg-gold text-ink"
+            style={{ animation: 'win-pop .7s ease-out both, win-glow 2.4s ease-in-out .7s infinite' }}
+          >
+            <Check size={60} strokeWidth={3} />
           </div>
-          <Link href="/app" className="btn-gold">
+          <h1 className="font-serif text-4xl leading-tight">Você atravessou mais uma vontade.</h1>
+          <p className="font-serif text-3xl text-gold">+1 conquista</p>
+          <p className="text-lg text-sand/90">Seu caminho ficou um pouco mais iluminado.</p>
+          <p className="text-mute">Vontade superada nº {won}</p>
+          <Link href="/app/trilha" className="btn-gold">
+            Ver minha trilha
+          </Link>
+          <Link href="/app" className="btn-ghost">
             Voltar ao início
           </Link>
         </div>
