@@ -42,9 +42,12 @@ export default function NotifyGate() {
     try {
       await enablePush()
       setState('ok')
-    } catch {
+    } catch (e: any) {
+      console.error('push:', e)
       if (Notification.permission === 'denied') setState('denied')
-      else setMsg('Não deu certo agora. Toque de novo em "Ativar lembretes".')
+      else if (e?.message === 'dismissed') setMsg('Você fechou o aviso do navegador. Toque de novo e escolha Permitir.')
+      else if (e?.message === 'no-vapid') setMsg('Os lembretes ainda não foram configurados no servidor.')
+      else setMsg('Não deu certo agora. Se o problema continuar, fale com o suporte.')
     }
     setBusy(false)
   }
