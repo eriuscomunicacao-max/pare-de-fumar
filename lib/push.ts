@@ -13,8 +13,13 @@ export function pushSupported() {
 
 export async function enablePush() {
   if (!pushSupported()) throw new Error('unsupported')
+  const vapid = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+  if (!vapid) throw new Error('no-vapid')
+
   const perm = await Notification.requestPermission()
-  if (perm !== 'granted') throw new Error('denied')
+  if (perm === 'denied') throw new Error('denied')
+  if (perm !== 'granted') throw new Error('dismissed') // fechou o aviso sem escolher
+
   const reg = await navigator.serviceWorker.register('/sw.js')
   await navigator.serviceWorker.ready
   const existing = await reg.pushManager.getSubscription()
@@ -22,7 +27,7 @@ export async function enablePush() {
     existing ??
     (await reg.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: urlB64ToUint8Array(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!) as BufferSource,
+      applicationServerKey: urlB64ToUint8Array(vapid) as BufferSource,
     }))
   await apiPost('/api/push/subscribe', sub.toJSON())
 }
