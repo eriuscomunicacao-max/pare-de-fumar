@@ -1,8 +1,13 @@
 import { NextResponse } from 'next/server'
 import { randomBytes } from 'crypto'
 import { admin } from '@/lib/supabase-admin'
+import { rateLimit } from '@/lib/rate-limit'
+import { clientIp } from '@/lib/security'
 
 export async function POST(req: Request) {
+  if (!(await rateLimit(`signup:${clientIp(req)}`, 8, 3600)))
+    return NextResponse.json({ error: 'Muitas tentativas. Tente de novo mais tarde.' }, { status: 429 })
+
   const { name, phone, cigsPerDay, packPrice } = await req.json()
   const digits = String(phone || '').replace(/\D/g, '')
   if (!String(name || '').trim() || digits.length < 10 || digits.length > 13)
@@ -11,7 +16,8 @@ export async function POST(req: Request) {
   const cpd = Math.min(200, Math.max(1, Number(cigsPerDay) || 10))
   const price = Math.min(200, Math.max(1, Number(packPrice) || 12))
 
-  const email = `u${digits}@users.paredefumar.app`
+  const domain = process.env.LOGIN_EMAIL_DOMAIN || 'users.paredefumar.app'
+  const email = `u${digits}@${domain}`
   const password = randomBytes(24).toString('hex')
 
   const { data, error } = await admin.auth.admin.createUser({ email, password, email_confirm: true })
@@ -30,7 +36,7 @@ export async function POST(req: Request) {
   })
   if (pErr) {
     await admin.auth.admin.deleteUser(data.user.id)
-    return NextResponse.json({ error: 'Erro ao criar conta. Tente de novo.' }, { status: 500 })
+    return NextResponse.json({ error: 'Esse telefone já tem conta. Fale com o suporte.' }, { status: 409 })
   }
   return NextResponse.json({ email, password })
 }
