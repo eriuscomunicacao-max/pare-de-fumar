@@ -15,11 +15,21 @@ async function asaas(path: string, init?: RequestInit) {
       'User-Agent': 'pare-de-fumar-app',
     },
   })
-  return r.json().catch(() => ({}))
+  const text = await r.text()
+  let j: any = {}
+  try {
+    j = JSON.parse(text)
+  } catch {
+    j = { __raw: text.slice(0, 200) }
+  }
+  // aparece em Vercel > Logs, para achar o motivo real do erro
+  if (!r.ok) console.error('asaas', init?.method || 'GET', path, r.status, text.slice(0, 300))
+  return { ...j, __status: r.status }
 }
 
 const digits = (v: unknown) => String(v ?? '').replace(/\D/g, '')
-const errMsg = (j: any, fallback: string) => j?.errors?.[0]?.description || fallback
+const errMsg = (j: any, fallback: string) =>
+  j?.errors?.[0]?.description || `${fallback} (Asaas ${j?.__status ?? '?'})`
 
 export async function POST(req: Request) {
   const user = await userFromRequest(req)
