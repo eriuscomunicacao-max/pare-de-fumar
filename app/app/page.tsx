@@ -5,15 +5,20 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Brain, Check, ChevronRight, Settings, Wind } from 'lucide-react'
 import Desert from '@/components/Desert'
-import { todayBR } from '@/lib/date'
+import { PERIOD_LABEL, periodOf, todayBR } from '@/lib/date'
 import { fmtDuration, levelInfo } from '@/lib/journey'
-import { MISSIONS, getMission } from '@/lib/missions'
+import { getMission, missionsFor } from '@/lib/missions'
 import { supabase } from '@/lib/supabase-browser'
 import { useNow, useProfile } from '@/lib/profile-context'
 
-// check-in da manhã: a resposta escolhe a missão do dia
+// check-in: a resposta escolhe a missão do dia
+const CHECKIN_TITLE = {
+  manha: 'Como você está começando hoje?',
+  tarde: 'Como está a sua tarde?',
+  noite: 'Como foi o seu dia?',
+}
 const CHECKIN = [
-  { key: 'confiante', label: 'Confiante', mission: 'cafe' },
+  { key: 'confiante', label: 'Confiante', mission: '' }, // '' = a primeira missão do período
   { key: 'ansioso', label: 'Ansioso', mission: 'respiracao' },
   { key: 'cansado', label: 'Cansado', mission: 'agua' },
   { key: 'vontade', label: 'Com vontade', mission: 'gatilho' },
@@ -53,9 +58,10 @@ export default function Home() {
   const seconds = (now - new Date(profile.quit_at).getTime()) / 1000
   const { current, next, progress } = levelInfo(seconds)
   const days = Math.floor(seconds / 86400)
-  const todays = MISSIONS.slice(0, 3)
+  const period = periodOf(now)
+  const todays = missionsFor(period, now)
   const chosen = CHECKIN.find(c => c.key === mood)
-  const mission = chosen ? getMission(chosen.mission) : undefined
+  const mission = chosen ? (chosen.mission ? getMission(chosen.mission) : todays[0]) : undefined
   const trialLeft =
     profile.status !== 'active' && profile.trial_ends_at
       ? (new Date(profile.trial_ends_at).getTime() - now) / 1000
@@ -73,10 +79,10 @@ export default function Home() {
         </Link>
       </header>
 
-      {/* check-in da manhã */}
+      {/* check-in */}
       {!chosen ? (
         <section className="panel space-y-3">
-          <h2 className="font-serif text-2xl">Como você está começando hoje?</h2>
+          <h2 className="font-serif text-2xl">{CHECKIN_TITLE[period]}</h2>
           <div className="grid grid-cols-2 gap-2">
             {CHECKIN.map(c => (
               <button key={c.key} className="chip py-4 text-center" onClick={() => choose(c)}>
@@ -146,7 +152,7 @@ export default function Home() {
       </Link>
 
       <section className="space-y-3">
-        <h2 className="font-serif text-2xl">Missões de hoje</h2>
+        <h2 className="font-serif text-2xl">Missões {PERIOD_LABEL[period]}</h2>
         {todays.map(m => (
           <Link
             key={m.key}
