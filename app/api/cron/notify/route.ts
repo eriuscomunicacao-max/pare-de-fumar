@@ -39,7 +39,7 @@ export async function GET(req: Request) {
   const { data: users } = await admin
     .from('profiles')
     .select('id, name')
-    .eq('status', 'active')
+    .or(`status.eq.active,trial_ends_at.gt.${new Date().toISOString()}`)
     .contains('notify_hours', [hour])
   if (!users?.length) return NextResponse.json({ sent: 0 })
 
