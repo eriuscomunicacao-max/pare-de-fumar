@@ -1,11 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Bell, Coins, Crown, Route, Wind } from 'lucide-react'
 import Desert from '@/components/Desert'
 import PaymentForm from '@/components/PaymentForm'
-import { loadProfile, Profile } from '@/lib/profile-context'
+import { hasAccess, loadProfile, Profile } from '@/lib/profile-context'
 
 const FEATURES = [
   { Icon: Wind, title: 'Botão "Estou com vontade"', text: 'Respiração guiada na hora da fissura.' },
@@ -28,6 +29,7 @@ export default function Plano() {
 
   if (!p) return <div className="min-h-dvh" />
   const renew = p.paid_count > 0
+  const inTrial = !renew && hasAccess(p)
   const price = renew ? 27.9 : 9.9
 
   return (
@@ -37,9 +39,13 @@ export default function Plano() {
       <div className="relative z-10 space-y-5 px-6 pb-10 pt-24 safe-top">
         <div className="text-center">
           <Crown className="mx-auto mb-2 text-gold" size={36} />
-          <h1 className="font-serif text-4xl">{renew ? 'Renovar seu acesso' : 'Pare de Fumar'}</h1>
+          <h1 className="font-serif text-4xl">
+            {renew ? 'Renovar seu acesso' : inTrial ? 'Continue sua jornada' : 'Seu teste terminou'}
+          </h1>
           <p className="mt-1 text-mute">
-            {renew ? 'Sua trilha está esperando por você.' : `Falta só um passo, ${p.name.split(' ')[0]}.`}
+            {renew
+              ? 'Sua trilha está esperando por você.'
+              : `Você já começou, ${p.name.split(' ')[0]}. Continue avançando com o Pare de Fumar.`}
           </p>
         </div>
 
@@ -66,10 +72,20 @@ export default function Plano() {
           product="plan"
           price={price}
           hasCustomer={!!p.asaas_customer_id}
+          needsPhone={!p.phone}
           isPaid={x => x.status === 'active'}
           onPaid={() => router.replace('/app')}
         />
         <p className="text-center text-sm text-mute">Cancele quando quiser.</p>
+
+        <Link href="/app/vontade" className="btn-ghost">
+          <Wind size={20} /> Estou com vontade agora
+        </Link>
+        {inTrial && (
+          <Link href="/app" className="block py-2 text-center text-mute">
+            Voltar para o app
+          </Link>
+        )}
       </div>
     </main>
   )
