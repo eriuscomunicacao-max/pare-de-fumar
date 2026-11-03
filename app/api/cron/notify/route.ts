@@ -19,7 +19,8 @@ const FRASES = [
 ]
 
 export async function GET(req: Request) {
-  if (req.headers.get('authorization') !== `Bearer ${process.env.CRON_SECRET}`)
+  const secret = process.env.CRON_SECRET
+  if (!secret || !safeEqual(req.headers.get('authorization'), `Bearer ${secret}`))
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
 
   webpush.setVapidDetails(
@@ -50,7 +51,6 @@ export async function GET(req: Request) {
   let sent = 0
   await Promise.all(
     (subs || []).map(async s => {
-      const nome = users.find(u => u.id === s.user_id)?.name?.split(' ')[0] ?? ''
       const frase = FRASES[Math.floor(Math.random() * FRASES.length)]
       try {
         await webpush.sendNotification(
