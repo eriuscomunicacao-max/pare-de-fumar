@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import webpush from 'web-push'
 import { admin } from '@/lib/supabase-admin'
+import { safeEqual } from '@/lib/security'
 
 export const dynamic = 'force-dynamic'
 
