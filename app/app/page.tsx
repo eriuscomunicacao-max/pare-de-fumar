@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Brain, Check, ChevronRight, Settings, Wind } from 'lucide-react'
 import Desert from '@/components/Desert'
 import { todayBR } from '@/lib/date'
-import { levelInfo } from '@/lib/journey'
+import { fmtDuration, levelInfo } from '@/lib/journey'
 import { MISSIONS } from '@/lib/missions'
 import { supabase } from '@/lib/supabase-browser'
 import { useNow, useProfile } from '@/lib/profile-context'
@@ -27,6 +27,10 @@ export default function Home() {
   const { current, next, progress } = levelInfo(seconds)
   const days = Math.floor(seconds / 86400)
   const todays = MISSIONS.slice(0, 3)
+  const trialLeft =
+    profile.status !== 'active' && profile.trial_ends_at
+      ? (new Date(profile.trial_ends_at).getTime() - now) / 1000
+      : 0
 
   return (
     <main className="space-y-5 px-5 safe-top">
@@ -39,6 +43,30 @@ export default function Home() {
           <Settings size={22} />
         </Link>
       </header>
+
+      {trialLeft > 0 && (
+        <Link href="/plano" className="panel flex items-center justify-between gap-3 border-gold/40 bg-gold/10">
+          <span>
+            <span className="block font-semibold text-gold">Teste grátis</span>
+            <span className="text-sm text-sand/90">Faltam {fmtDuration(trialLeft)}</span>
+          </span>
+          <span className="rounded-full bg-gold px-4 py-2 text-sm font-semibold text-ink">Continuar</span>
+        </Link>
+      )}
+
+      {/* primeira missão: 1 hora sem fumar */}
+      {seconds < 3600 && (
+        <section className="panel space-y-3 border-gold/40">
+          <p className="text-sm text-gold">Sua primeira missão</p>
+          <h2 className="font-serif text-3xl leading-tight">Ficar 1 hora sem fumar</h2>
+          <div className="h-2.5 overflow-hidden rounded-full bg-line">
+            <div className="h-full rounded-full bg-gold transition-all" style={{ width: `${Math.round((seconds / 3600) * 100)}%` }} />
+          </div>
+          <p className="text-mute">
+            Faltam {fmtDuration(3600 - seconds)}. Se a vontade aparecer, toque em “Estou com vontade agora”.
+          </p>
+        </section>
+      )}
 
       <section className="overflow-hidden rounded-3xl border border-line bg-card">
         <Desert className="h-40 w-full" glow={0.8} />
@@ -80,21 +108,22 @@ export default function Home() {
         ))}
       </section>
 
-      {profile.ai_active ? (
-        <Link href="/app/ia" className="btn-ghost">
-          <Brain size={20} /> Companheiro IA
-        </Link>
-      ) : (
-        <Link href="/app/ia" className="panel block space-y-2 border-gold/40 bg-gold/10 active:scale-[0.99]">
-          <p className="flex items-center gap-2 font-serif text-2xl text-gold">
-            <Brain size={24} /> Companheiro IA
-          </p>
-          <p className="text-sand/90">
-            Apoio na hora da vontade, com base nos seus gatilhos. Fala só sobre parar de fumar.
-          </p>
-          <p className="text-lg font-semibold text-gold">R$ 59,90 por mês · Conhecer</p>
-        </Link>
-      )}
+      {profile.status === 'active' &&
+        (profile.ai_active ? (
+          <Link href="/app/ia" className="btn-ghost">
+            <Brain size={20} /> Companheiro IA
+          </Link>
+        ) : (
+          <Link href="/app/ia" className="panel block space-y-2 border-gold/40 bg-gold/10 active:scale-[0.99]">
+            <p className="flex items-center gap-2 font-serif text-2xl text-gold">
+              <Brain size={24} /> Companheiro IA
+            </p>
+            <p className="text-sand/90">
+              Apoio na hora da vontade, com base nos seus gatilhos. Fala só sobre parar de fumar.
+            </p>
+            <p className="text-lg font-semibold text-gold">R$ 59,90 por mês · Conhecer</p>
+          </Link>
+        ))}
     </main>
   )
 }
