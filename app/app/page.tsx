@@ -2,18 +2,35 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Brain, Check, ChevronRight, Settings, Wind } from 'lucide-react'
 import Desert from '@/components/Desert'
 import { todayBR } from '@/lib/date'
 import { fmtDuration, levelInfo } from '@/lib/journey'
-import { MISSIONS } from '@/lib/missions'
+import { MISSIONS, getMission } from '@/lib/missions'
 import { supabase } from '@/lib/supabase-browser'
 import { useNow, useProfile } from '@/lib/profile-context'
 
+// check-in da manhã: a resposta escolhe a missão do dia
+const CHECKIN = [
+  { key: 'confiante', label: 'Confiante', mission: 'cafe' },
+  { key: 'ansioso', label: 'Ansioso', mission: 'respiracao' },
+  { key: 'cansado', label: 'Cansado', mission: 'agua' },
+  { key: 'vontade', label: 'Com vontade', mission: 'gatilho' },
+]
+
 export default function Home() {
   const { profile } = useProfile()
+  const router = useRouter()
   const now = useNow(30000)
   const [done, setDone] = useState<string[]>([])
+  const [wins, setWins] = useState(0)
+  const [mood, setMood] = useState<string | null>(null)
+  const moodKey = `checkin:${profile.id}:${todayBR()}`
+
+  useEffect(() => {
+    setMood(localStorage.getItem(moodKey))
+  }, [moodKey])
 
   useEffect(() => {
     supabase
@@ -21,12 +38,24 @@ export default function Home() {
       .select('mission_key')
       .eq('done_on', todayBR())
       .then(({ data }) => setDone((data || []).map(d => d.mission_key)))
+    Promise.all([
+      supabase.from('missions_done').select('id', { count: 'exact', head: true }),
+      supabase.from('cravings').select('id', { count: 'exact', head: true }).eq('smoked', false),
+    ]).then(([m, c]) => setWins((m.count || 0) + (c.count || 0)))
   }, [])
+
+  function choose(c: (typeof CHECKIN)[number]) {
+    localStorage.setItem(moodKey, c.key)
+    setMood(c.key)
+    if (c.key === 'vontade') router.push('/app/vontade')
+  }
 
   const seconds = (now - new Date(profile.quit_at).getTime()) / 1000
   const { current, next, progress } = levelInfo(seconds)
   const days = Math.floor(seconds / 86400)
   const todays = MISSIONS.slice(0, 3)
+  const chosen = CHECKIN.find(c => c.key === mood)
+  const mission = chosen ? getMission(chosen.mission) : undefined
   const trialLeft =
     profile.status !== 'active' && profile.trial_ends_at
       ? (new Date(profile.trial_ends_at).getTime() - now) / 1000
@@ -44,14 +73,43 @@ export default function Home() {
         </Link>
       </header>
 
+      {/* check-in da manhã */}
+      {!chosen ? (
+        <section className="panel space-y-3">
+          <h2 className="font-serif text-2xl">Como você está começando hoje?</h2>
+          <div className="grid grid-cols-2 gap-2">
+            {CHECKIN.map(c => (
+              <button key={c.key} className="chip py-4 text-center" onClick={() => choose(c)}>
+                {c.label}
+              </button>
+            ))}
+          </div>
+        </section>
+      ) : (
+        mission && (
+          <Link
+            href={`/app/missao/${mission.key}`}
+            className="panel block space-y-1 border-gold/40 bg-gold/10 active:scale-[0.99]"
+          >
+            <p className="text-sm text-gold">Sua missão de hoje · {chosen.label.toLowerCase()}</p>
+            <p className="font-serif text-2xl leading-tight">{mission.title}</p>
+            <p className="text-sm text-sand/90">{done.includes(mission.key) ? 'Concluída hoje' : 'Toque para começar'}</p>
+          </Link>
+        )
+      )}
+
       {trialLeft > 0 && (
-        <Link href="/plano" className="panel flex items-center justify-between gap-3 border-gold/40 bg-gold/10">
+        <div className="panel flex items-center justify-between gap-3 border-gold/40 bg-gold/10">
           <span>
             <span className="block font-semibold text-gold">Teste grátis</span>
             <span className="text-sm text-sand/90">Faltam {fmtDuration(trialLeft)}</span>
           </span>
-          <span className="rounded-full bg-gold px-4 py-2 text-sm font-semibold text-ink">Continuar</span>
-        </Link>
+          {(wins > 0 || seconds >= 3600) && (
+            <Link href="/plano" className="rounded-full bg-gold px-4 py-2 text-sm font-semibold text-ink">
+              Ver o plano
+            </Link>
+          )}
+        </div>
       )}
 
       {/* primeira missão: 1 hora sem fumar */}
