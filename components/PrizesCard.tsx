@@ -70,7 +70,7 @@ export default function PrizesCard() {
         />
         <div className="flex flex-1 flex-col justify-between gap-2">
           <div>
-            <p className="font-semibold">Prêmio 1 · em 3 dias</p>
+            <p className="font-semibold">Prêmio 1 · LIMPE SEUS PULMÕES! Passo a passo completo!</p>
             <p className="text-sm text-mute">{status1}</p>
           </div>
           {open1 ? (
@@ -104,7 +104,7 @@ export default function PrizesCard() {
         />
         <div className="flex flex-1 flex-col justify-between gap-2">
           <div>
-            <p className="font-semibold">Prêmio 2, o maior · em 7 dias</p>
+            <p className="font-semibold">Prêmio 2, PARE DE FUMAR EM 7 DIAS!</p>
             <p className="text-sm text-mute">{status2}</p>
           </div>
           {open2 && !used2 ? (
