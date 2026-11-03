@@ -1,13 +1,13 @@
 'use client'
 
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { supabase } from './supabase-browser'
 
 export type Profile = {
   id: string
   name: string
-  phone: string
+  phone: string | null
   mode: string
   quit_at: string
   best_seconds: number
@@ -22,7 +22,12 @@ export type Profile = {
   goal_idx: number | null
   ai_active: boolean
   ai_period_end: string | null
+  trial_ends_at: string | null
 }
+
+// acesso liberado: plano pago OU teste de 24h ainda correndo
+export const hasAccess = (p: Profile, now = Date.now()) =>
+  p.status === 'active' || (!!p.trial_ends_at && new Date(p.trial_ends_at).getTime() > now)
 
 type Ctx = { profile: Profile; refresh: () => Promise<void> }
 const ProfileCtx = createContext<Ctx | null>(null)
@@ -64,7 +69,6 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
       setFailed(true) // sessão válida, mas o perfil não carregou: mostra "tentar de novo"
       return
     }
-    if (p.status !== 'active') return router.replace('/plano')
     setFailed(false)
     setProfile(p)
   }, [router])
@@ -73,7 +77,15 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     refresh()
   }, [refresh])
 
-  if (!profile)
+  // sem acesso (teste acabou e não pagou): só a tela "Estou com vontade" continua liberada
+  const pathname = usePathname()
+  const now = useNow(30000)
+  const blocked = !!profile && !hasAccess(profile, now) && !pathname.startsWith('/app/vontade')
+  useEffect(() => {
+    if (blocked) router.replace('/plano')
+  }, [blocked, router])
+
+  if (!profile || blocked)
     return failed ? (
       <div className="flex min-h-dvh flex-col items-center justify-center gap-4 px-6 text-center">
         <p className="text-lg">Não consegui carregar agora.</p>
