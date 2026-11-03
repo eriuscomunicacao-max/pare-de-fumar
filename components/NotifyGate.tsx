@@ -1,7 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Bell } from 'lucide-react'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { Bell, Wind } from 'lucide-react'
 import { enablePush, pushSupported } from '@/lib/push'
 import InstallGuide from './InstallGuide'
 
@@ -13,6 +15,7 @@ export default function NotifyGate() {
   const [state, setState] = useState<State>('loading')
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState('')
+  const path = usePathname()
 
   useEffect(() => {
     const ios = /iphone|ipad|ipod/i.test(navigator.userAgent)
@@ -52,7 +55,8 @@ export default function NotifyGate() {
     setBusy(false)
   }
 
-  if (state === 'loading' || state === 'ok') return null
+  // a ajuda na hora da vontade nunca fica atrás desta tela
+  if (state === 'loading' || state === 'ok' || path.startsWith('/app/vontade')) return null
 
   return (
     <div
@@ -96,6 +100,9 @@ export default function NotifyGate() {
               <Bell size={22} /> Ativar lembretes agora
             </button>
             <p className="text-center text-sm text-mute">Toque em Permitir quando o celular perguntar.</p>
+            <Link href="/app/vontade" className="btn-ghost">
+              <Wind size={20} /> Estou com vontade agora
+            </Link>
           </div>
         </>
       )}
@@ -114,6 +121,9 @@ export default function NotifyGate() {
             <button className="w-full py-3 text-mute" onClick={skip}>
               Continuar sem lembretes por agora
             </button>
+            <Link href="/app/vontade" className="btn-ghost">
+              <Wind size={20} /> Estou com vontade agora
+            </Link>
           </div>
         </>
       )}
