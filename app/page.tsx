@@ -18,6 +18,7 @@ const STEPS = [
     Icon: Trophy,
     title: 'Cada vontade vencida vira conquista.',
     text: 'Acende uma luz no seu caminho e você ganha prêmios por isso.',
+    bold: true,
   },
   {
     Icon: Heart,
@@ -132,7 +133,7 @@ export default function Welcome() {
 
       <div className="relative z-10 space-y-8 px-6 pb-56 pt-16 safe-top">
         <header className="space-y-3">
-          <h1 className="font-serif text-5xl leading-[1.05] text-sand">Pare de fumar, uma vontade de cada vez.</h1>
+          <h1 className="font-serif text-5xl leading-[1.05] text-sand">Pare de fumar! Com esse Aplicativo.</h1>
           <p className="text-lg text-sand/85">
             A vontade de fumar dura poucos minutos. O app te ajuda a atravessar cada uma, sem julgamento.
           </p>
@@ -140,12 +141,12 @@ export default function Welcome() {
 
         <section className="space-y-3">
           <h2 className="font-serif text-2xl text-gold">Como funciona</h2>
-          {STEPS.map(({ Icon, title, text }) => (
+                    {STEPS.map(({ Icon, title, text, bold }) => (
             <div key={title} className="panel flex items-start gap-4">
               <Icon className="mt-0.5 shrink-0 text-gold" size={28} strokeWidth={1.7} />
               <div>
                 <p className="text-lg font-medium leading-snug">{title}</p>
-                <p className="mt-1 text-mute">{text}</p>
+                <p className={bold ? 'mt-1 font-bold text-sand' : 'mt-1 text-mute'}>{text}</p>
               </div>
             </div>
           ))}
