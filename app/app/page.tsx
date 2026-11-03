@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Brain, Check, ChevronRight, Settings, Wind } from 'lucide-react'
 import Desert from '@/components/Desert'
+import PrizesCard from '@/components/PrizesCard'
 import { PERIOD_LABEL, periodOf, todayBR } from '@/lib/date'
 import { fmtDuration, levelInfo } from '@/lib/journey'
 import { getMission, missionsFor } from '@/lib/missions'
@@ -150,6 +151,8 @@ export default function Home() {
       <Link href="/app/vontade" className="btn-gold animate-pulseRing text-xl">
         <Wind size={24} /> Estou com vontade agora
       </Link>
+
+      <PrizesCard />
 
       <section className="space-y-3">
         <h2 className="font-serif text-2xl">Missões {PERIOD_LABEL[period]}</h2>
