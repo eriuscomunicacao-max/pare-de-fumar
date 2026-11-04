@@ -86,7 +86,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
   const now = useNow(30000)
   const blocked = !!profile && !hasAccess(profile, now) && !pathname.startsWith('/app/vontade')
   useEffect(() => {
-    if (blocked) router.replace('/plano')
+    if (blocked) router.replace('/acesso')
   }, [blocked, router])
 
   if (!profile || blocked)
