@@ -41,6 +41,7 @@ function Offer() {
         product="ai"
         price={59.9}
         hasCustomer={!!profile.asaas_customer_id}
+        needsPhone={!profile.phone}
         isPaid={p => p.ai_active}
         onPaid={refresh}
       />
