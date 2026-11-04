@@ -2,12 +2,17 @@
 
 import { useRef, useState } from 'react'
 import { ArrowDown, Bell, Lock, Route, ShieldCheck, Wind } from 'lucide-react'
+import AppShots from '@/components/AppShots'
 import {
+  APP_SHOTS,
   BANNER_URL,
   CHECKOUT_URL,
   IMG_DOR,
   IMG_HOSPITAL,
+  IMG_RESULT,
   INSIDE,
+  OFFER,
+  PRICE,
   PRODUCT_NAME,
   TEST,
   levelOf,
@@ -21,7 +26,7 @@ function Photo({ src, alt, className = '' }: { src: string; alt: string; classNa
   return <img src={src} alt={alt} loading="lazy" className={className} onError={() => setOk(false)} />
 }
 
-function BuyButton({ enabled, label = 'Quero começar agora' }: { enabled: boolean; label?: string }) {
+function BuyButton({ enabled, label = `Quero começar agora · ${PRICE}` }: { enabled: boolean; label?: string }) {
   return enabled ? (
     <a href={CHECKOUT_URL} target="_blank" rel="noopener noreferrer" className="btn-gold !py-5 !text-xl">
       {label}
@@ -65,6 +70,10 @@ export default function Metodo() {
           O <b className="text-gold">{PRODUCT_NAME}</b> é um app de acompanhamento para você atravessar cada vontade,
           um passo de cada vez.
         </p>
+        <div className="panel space-y-1 border-gold/50 bg-gold/10 text-center">
+          <p className="text-sm text-gold">{OFFER}</p>
+          <p className="font-serif text-6xl leading-none text-gold">{PRICE}</p>
+        </div>
         <button className="btn-gold" onClick={() => go(testRef)}>
           Fazer o teste de dependência <ArrowDown size={20} />
         </button>
@@ -140,6 +149,7 @@ export default function Metodo() {
             </button>
           </div>
         )}
+        {done && <Photo src={IMG_RESULT} alt="Você pode largar o cigarro" className="w-full rounded-2xl" />}
       </section>
 
       {/* 3. SOLUÇÃO */}
@@ -149,6 +159,9 @@ export default function Metodo() {
           Um método prático para entender o seu hábito e seguir um plano, e um app que fica com você na hora em que a
           vontade aparece.
         </p>
+        <div className="-mx-6">
+          <AppShots shots={APP_SHOTS} />
+        </div>
         {[
           {
             Icon: ShieldCheck,
@@ -218,20 +231,24 @@ export default function Metodo() {
       {/* 5. AÇÃO */}
       <section className="space-y-4 px-6 pb-8">
         <h2 className="font-serif text-3xl leading-tight">Comece hoje. A próxima vontade já tem ajuda.</h2>
+        <div className="panel space-y-1 border-gold/50 bg-gold/10 text-center">
+          <p className="text-sm text-gold">{OFFER}</p>
+          <p className="font-serif text-6xl leading-none text-gold">{PRICE}</p>
+        </div>
         <BuyButton enabled={done} />
         <p className="text-center text-sm text-mute">Compra segura pela Cakto.</p>
       </section>
 
       <p className="px-6 text-center text-xs leading-relaxed text-mute">
-        Este material e o app não substituem acompanhamento médico. O SUS oferece tratamento gratuito contra o
-        tabagismo.
+        Os resultados variam de pessoa para pessoa. Este material e o app não substituem acompanhamento médico. O SUS
+        oferece tratamento gratuito contra o tabagismo.
       </p>
 
       {/* botão fixo depois do teste */}
       {done && (
         <div className="fixed inset-x-0 bottom-0 z-20">
           <div className="mx-auto max-w-md bg-gradient-to-t from-ink via-ink/95 to-transparent px-6 pb-[max(env(safe-area-inset-bottom),16px)] pt-8">
-            <BuyButton enabled label="Quero começar agora" />
+            <BuyButton enabled />
           </div>
         </div>
       )}
