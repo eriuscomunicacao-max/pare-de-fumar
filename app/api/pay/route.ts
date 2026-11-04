@@ -43,7 +43,7 @@ export async function POST(req: Request) {
   if (product === 'plan') return NextResponse.json({ error: 'Plano indisponível.' }, { status: 410 })
 
   const { data: p } = await admin.from('profiles').select('*').eq('id', user.id).single()
-  if (!p) return NextResponse.json({ error: 'Perfil não encontrado' }, { status: 404 })
+  
 
   // só quem comprou o Método (status ativo) pode assinar a IA
   if (p.status !== 'active')
