@@ -12,6 +12,18 @@ export const IMG_DOR =
   'https://portaldrauziovarella.nyc3.digitaloceanspaces.com/wp-content/uploads/2022/08/22184317/Depositphotos_279523644_XL-Copia.jpg'
 export const IMG_HOSPITAL = 'https://pareidefumar.com.br/bryan.jpg'
 
+// imagem que aparece sempre depois do teste
+export const IMG_RESULT =
+  'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ-7a2locyFhxltgFjQuQNeTEpYwljADpHxtammbQCXMMXU_Mxd-2mSXT1A&s=10'
+
+// preço e promessa em destaque
+export const PRICE = 'R$ 27,00'
+export const OFFER = 'Acesso ao método para parar de fumar em 3 dias'
+
+// Telas do app no carrossel. Vazio = usa as telas desenhadas em components/AppShots.tsx.
+// Para usar prints reais, coloque aqui as URLs das imagens (uma por tela).
+export const APP_SHOTS: string[] = []
+
 // "O que tem dentro": preencha com o índice real. Vazio = o bloco não aparece.
 export const INSIDE: string[] = []
 
