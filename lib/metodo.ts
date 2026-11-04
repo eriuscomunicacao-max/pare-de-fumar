@@ -14,7 +14,7 @@ export const IMG_HOSPITAL = 'https://pareidefumar.com.br/bryan.jpg'
 
 // imagem que aparece sempre depois do teste
 export const IMG_RESULT =
-  'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ-7a2locyFhxltgFjQuQNeTEpYwljADpHxtammbQCXMMXU_Mxd-2mSXT1A&s=10'
+  'https://regional24horas.com.br/thumb_galeria.php?img=fotos/17281772386701e456b0d45975840487.jpg'
 
 // preço e promessa em destaque
 export const PRICE = 'R$ 27,00'
