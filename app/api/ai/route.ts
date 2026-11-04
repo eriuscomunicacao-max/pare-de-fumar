@@ -37,8 +37,7 @@ export async function POST(req: Request) {
   if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
 
   const { data: p } = await admin.from('profiles').select('*').eq('id', user.id).single()
-   if (!p || p.status !== 'active')
-    return NextResponse.json({ error: 'Ative o plano para usar o app.' }, { status: 403 })
+     if (!p) return NextResponse.json({ error: 'Perfil não encontrado.' }, { status: 403 })
   const aiOk = p.ai_active && (!p.ai_period_end || new Date(p.ai_period_end).getTime() > Date.now())
   if (!aiOk) return NextResponse.json({ error: 'Ative o Companheiro IA para conversar.' }, { status: 403 })
 
