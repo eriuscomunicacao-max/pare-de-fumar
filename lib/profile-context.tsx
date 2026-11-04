@@ -31,7 +31,7 @@ export type Profile = {
 
 // acesso liberado: plano pago OU teste de 24h ainda correndo
 export const hasAccess = (p: Profile, now = Date.now()) =>
-  p.status === 'active' || (!!p.trial_ends_at && new Date(p.trial_ends_at).getTime() > now)
+  p.status === 'active' || p.ai_active || (!!p.trial_ends_at && new Date(p.trial_ends_at).getTime() > now)
 
 type Ctx = { profile: Profile; refresh: () => Promise<void> }
 const ProfileCtx = createContext<Ctx | null>(null)
