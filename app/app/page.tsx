@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Brain, Check, ChevronRight, Settings, Wind } from 'lucide-react'
 import Desert from '@/components/Desert'
-import PrizesCard from '@/components/PrizesCard'
 import { PERIOD_LABEL, periodOf, todayBR } from '@/lib/date'
 import { fmtDuration, levelInfo } from '@/lib/journey'
 import { getMission, missionsFor } from '@/lib/missions'
@@ -30,7 +29,6 @@ export default function Home() {
   const router = useRouter()
   const now = useNow(30000)
   const [done, setDone] = useState<string[]>([])
-  const [wins, setWins] = useState(0)
   const [mood, setMood] = useState<string | null>(null)
   const moodKey = `checkin:${profile.id}:${todayBR()}`
 
@@ -44,10 +42,6 @@ export default function Home() {
       .select('mission_key')
       .eq('done_on', todayBR())
       .then(({ data }) => setDone((data || []).map(d => d.mission_key)))
-    Promise.all([
-      supabase.from('missions_done').select('id', { count: 'exact', head: true }),
-      supabase.from('cravings').select('id', { count: 'exact', head: true }).eq('smoked', false),
-    ]).then(([m, c]) => setWins((m.count || 0) + (c.count || 0)))
   }, [])
 
   function choose(c: (typeof CHECKIN)[number]) {
@@ -63,10 +57,6 @@ export default function Home() {
   const todays = missionsFor(period, now)
   const chosen = CHECKIN.find(c => c.key === mood)
   const mission = chosen ? (chosen.mission ? getMission(chosen.mission) : todays[0]) : undefined
-  const trialLeft =
-    profile.status !== 'active' && profile.trial_ends_at
-      ? (new Date(profile.trial_ends_at).getTime() - now) / 1000
-      : 0
 
   return (
     <main className="space-y-5 px-5 safe-top">
@@ -80,7 +70,7 @@ export default function Home() {
         </Link>
       </header>
 
-      {/* check-in */}
+      {/* check-in da manhã */}
       {!chosen ? (
         <section className="panel space-y-3">
           <h2 className="font-serif text-2xl">{CHECKIN_TITLE[period]}</h2>
@@ -103,20 +93,6 @@ export default function Home() {
             <p className="text-sm text-sand/90">{done.includes(mission.key) ? 'Concluída hoje' : 'Toque para começar'}</p>
           </Link>
         )
-      )}
-
-      {trialLeft > 0 && (
-        <div className="panel flex items-center justify-between gap-3 border-gold/40 bg-gold/10">
-          <span>
-            <span className="block font-semibold text-gold">Teste grátis</span>
-            <span className="text-sm text-sand/90">Faltam {fmtDuration(trialLeft)}</span>
-          </span>
-          {(wins > 0 || seconds >= 3600) && (
-            <Link href="/plano" className="rounded-full bg-gold px-4 py-2 text-sm font-semibold text-ink">
-              Ver o plano
-            </Link>
-          )}
-        </div>
       )}
 
       {/* primeira missão: 1 hora sem fumar */}
@@ -151,8 +127,6 @@ export default function Home() {
       <Link href="/app/vontade" className="btn-gold animate-pulseRing text-xl">
         <Wind size={24} /> Estou com vontade agora
       </Link>
-
-      <PrizesCard />
 
       <section className="space-y-3">
         <h2 className="font-serif text-2xl">Missões {PERIOD_LABEL[period]}</h2>
