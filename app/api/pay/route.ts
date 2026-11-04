@@ -40,16 +40,15 @@ export async function POST(req: Request) {
   const body = await req.json()
   const product: 'plan' | 'ai' = body.product === 'ai' ? 'ai' : 'plan'
   const method: 'pix' | 'card' = body.method === 'card' ? 'card' : 'pix'
+  if (product === 'plan') return NextResponse.json({ error: 'Plano indisponível.' }, { status: 410 })
 
   const { data: p } = await admin.from('profiles').select('*').eq('id', user.id).single()
   if (!p) return NextResponse.json({ error: 'Perfil não encontrado' }, { status: 404 })
 
-  if (product === 'plan' && p.status === 'active')
-    return NextResponse.json({ error: 'Seu plano já está ativo.' }, { status: 400 })
-  if (product === 'ai') {
-    if (p.status !== 'active') return NextResponse.json({ error: 'Ative o plano primeiro.' }, { status: 400 })
-    if (p.ai_active) return NextResponse.json({ error: 'O Companheiro IA já está ativo.' }, { status: 400 })
-  }
+  // só quem comprou o Método (status ativo) pode assinar a IA
+  if (p.status !== 'active')
+    return NextResponse.json({ error: 'Acesse o app pela compra do Método primeiro.' }, { status: 403 })
+  if (p.ai_active) return NextResponse.json({ error: 'O Companheiro IA já está ativo.' }, { status: 400 })
 
   // ----- telefone: pedido só na hora de pagar ("salve sua jornada") -----
   let phone: string | null = p.phone
